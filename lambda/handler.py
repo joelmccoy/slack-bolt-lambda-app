@@ -1,14 +1,16 @@
 """Slack Bolt Lambda Function Handler"""
 import logging
+import json
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def lambda_handler(_):
+# pylint: disable=unused-argument
+def lambda_handler(event, context):
     """Lambda Entry Point"""
     logger.info("In hello world lambda!")
 
     message = "Hello from Lambda!"
 
-    return {"body": message}
+    return {"statusCode": 200, "body": json.dumps(message)}

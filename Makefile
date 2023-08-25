@@ -1,4 +1,4 @@
-all: format lint tf-init tf-apply
+all: format lint tf-deploy
 
 format:
 	terraform fmt -recursive
