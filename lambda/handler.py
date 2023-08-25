@@ -1,16 +1,41 @@
 """Slack Bolt Lambda Function Handler"""
 import logging
-import json
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+from slack_bolt import App
+from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+
+# process_before_response must be True when running on FaaS
+app = App(process_before_response=True)
 
 
-# pylint: disable=unused-argument
-def lambda_handler(event, context):
-    """Lambda Entry Point"""
-    logger.info("In hello world lambda!")
+@app.middleware  # or app.use(log_request)
+def log_request(logger, body, next):  # pylint: disable=redefined-builtin
+    logger.debug(body)
+    return next()
 
-    message = "Hello from Lambda!"
 
-    return {"statusCode": 200, "body": json.dumps(message)}
+COMMAND = "/hello-bolt-python-lambda"
+
+
+def respond_to_slack_within_3_seconds(body, ack):
+    if body.get("text") is None:
+        ack(f":x: Usage: {COMMAND} (description here)")
+    else:
+        title = body["text"]
+        ack(f"Accepted! (task: {title})")
+
+
+def process_request(respond, body):
+    title = body["text"]
+    respond(f"Completed! (task: {title})")
+
+
+app.command(COMMAND)(ack=respond_to_slack_within_3_seconds, lazy=[process_request])
+
+SlackRequestHandler.clear_all_log_handlers()
+logging.basicConfig(format="%(asctime)s %(message)s", level=logging.DEBUG)
+
+
+def handler(event, context):
+    slack_handler = SlackRequestHandler(app=app)
+    return slack_handler.handle(event, context)
