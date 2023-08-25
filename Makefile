@@ -9,6 +9,7 @@ lint:
 	flake8 lambda
 	mypy lambda
 	pylint lambda
+	tfsec
 
 clean:
 	rm -rf build
